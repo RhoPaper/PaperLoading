@@ -1,46 +1,64 @@
 <script setup>
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 
-const afterLoadingWidth = '100px';
-var isLoading = false;
-
-const LoadingAnimation = (element, targetWidth) => {
-    if (element && isLoading) {
-        element.style.width = targetWidth;
-    }
-};
-
-const onLoading = () => {
-    let loadingDOM = window.document.getElementById("pixel-loading");
-    setTimeout(() => {
-        isLoading = true;
-        LoadingAnimation(loadingDOM, afterLoadingWidth);
-    }, 100);
-    setTimeout(() => {
-        console.log('Loading completed');
-        isLoading = false;
-    }, 1000);
-};
+const isLoading = ref(false);
 
 onMounted(() => {
-    onLoading();
+    setTimeout(() => {
+        isLoading.value = true;
+    }, 100);
+
+    setTimeout(() => {
+        console.log('Loading completed');
+    }, 1100);
 });
 </script>
 
 <template>
-    <div id="pixel-loading"></div>
+    <div id="pixel-loading" :class="{ 'is-loading': isLoading }"></div>
 </template>
 
 <style scoped>
 #pixel-loading {
+    --final-width: 100px;
+    --final-height: 100px;
+    --initial-size: 10px;
+
     position: absolute;
-    top: 50%;
+    /* 水平：左边缘对齐中心，向右展开 */
     left: 50%;
-    /* translateX(0) 让左边缘对齐中心点，宽度向右增长 */
-    transform: translate(0, -50%);
-    width: 10px;
-    height: 10px;
+    transform: translate(0, 0);
+    /* 垂直：底部定位在视口中心 + 最终高度的一半，这样展开后中心点才居中 */
+    bottom: calc(50% - var(--final-height) / 2);
+
+    width: var(--initial-size);
+    height: var(--initial-size);
     background-color: #000;
-    transition: width .5s ease;
+}
+
+#pixel-loading.is-loading {
+    animation:
+        expandWidth 0.5s ease forwards,
+        expandHeight 0.5s ease 0.5s forwards;
+}
+
+@keyframes expandWidth {
+    from {
+        width: var(--initial-size);
+    }
+
+    to {
+        width: var(--final-width);
+    }
+}
+
+@keyframes expandHeight {
+    from {
+        height: var(--initial-size);
+    }
+
+    to {
+        height: var(--final-height);
+    }
 }
 </style>
