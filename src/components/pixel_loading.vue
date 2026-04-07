@@ -3,19 +3,17 @@
 </script>
 
 <template>
-    <div class="pixel-loading">
-
-    </div>
+    <div class="pixel-loading"> </div>
 </template>
 
 <style scoped>
-    .pixel-loading {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 10px;
-        height: 10px;
-        background-color: #000;
-    }
+.pixel-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    background-color: #000;
+}
 </style>
