@@ -4,10 +4,7 @@ import { ref, onMounted } from 'vue';
 const isLoading = ref(false);
 
 onMounted(() => {
-    setTimeout(() => {
-        isLoading.value = true;
-    }, 100);
-
+    isLoading.value = true;
     setTimeout(() => {
         console.log('Loading completed');
     }, 1100);
@@ -20,9 +17,9 @@ onMounted(() => {
 
 <style scoped>
 #pixel-loading {
-    --final-width: 100px;
-    --final-height: 100px;
-    --initial-size: 10px;
+    --final-width: 50px;
+    --final-height: 50px;
+    --initial-size: 5px;
 
     position: absolute;
     /* 水平：左边缘对齐中心，向右展开 */
