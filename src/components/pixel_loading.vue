@@ -13,6 +13,13 @@ onMounted(() => {
         // 可在此处重置 isLoading 或执行其它后续逻辑
     }, 1100);
 });
+
+function testLoadingAnimation() {
+    isLoading.value = true;
+    setTimeout(() => {
+        console.log('Loading completed');
+    }, 1100);
+}
 </script>
 
 <template>
@@ -21,6 +28,7 @@ onMounted(() => {
         <!-- 实际执行伸展动画的像素块 -->
         <div class="pixel"></div>
     </div>
+    <button @click="testLoadingAnimation()">Test Loading Animation</button>
 </template>
 
 <style scoped>
@@ -57,34 +65,56 @@ onMounted(() => {
     background-color: #000;
     transform-origin: left bottom;
     /* 宽度以左为锚，垂直以底为锚 */
+
+    /* 性能优化提示，提升动画丝滑度 */
+    will-change: width, height;
 }
 
-/* 先横向扩展（左->右），再纵向扩展（下->上） */
+/* 使用丝滑的自定义缓动曲线并保持无限循环 */
 #pixel-loading.is-loading .pixel {
-    animation:
-        expandWidth 0.5s ease forwards,
-        expandHeight 0.5s ease 0.5s forwards;
+    /* 使用更丝滑的非线性缓动：
+       cubic-bezier(0.22, 1, 0.36, 1) 常用于产生平滑且略有弹性的过渡 */
+    animation: pixelLoop 2.5s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    /* 兼容性备选（浏览器可能忽略）： */
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* 宽度：从初始像素扩展到容器宽度（右侧伸展） */
-@keyframes expandWidth {
+/* 使用单一 keyframes 完成前进 -> 等待1s -> 反向 -> 收回后等待0.5s，并无限循环 */
+@keyframes pixelLoop {
     from {
         width: var(--initial-size);
+        height: var(--initial-size);
     }
 
-    to {
+    14% {
         width: 100%;
+        height: var(--initial-size);
     }
-}
 
-/* 高度：从初始像素扩展到容器高度（底部固定，向上生长） */
-@keyframes expandHeight {
-    from {
+    28% {
+        width: 100%;
+        height: 100%;
+    }
+
+    68% {
+        width: 100%;
+        height: 100%;
+    }
+
+    74% {
+        width: 100%;
+        height: var(--initial-size);
+    }
+
+    80% {
+        width: var(--initial-size);
         height: var(--initial-size);
     }
 
     to {
-        height: 100%;
+        /* 保持小方块直到下一周期开始（80% -> 100% 为 0.5s 等待） */
+        width: var(--initial-size);
+        height: var(--initial-size);
     }
 }
 </style>
