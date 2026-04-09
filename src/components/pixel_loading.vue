@@ -110,12 +110,12 @@ onUnmounted(() => { // 组件卸载时
 
 #pixel-loading.expand .pixel {
     /* 展开时使用 expand 动画 */
-    animation: expand 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: expand 0.7s cubic-bezier(0.65, 0, 0.35, 1) forwards;
 }
 
 #pixel-loading.collapse .pixel {
     /* 收缩时使用 collapse 动画 */
-    animation: collapse 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: collapse 0.3s cubic-bezier(0.37, 0.82, 0.21, 0.97) forwards;
 }
 
 @keyframes expand {
