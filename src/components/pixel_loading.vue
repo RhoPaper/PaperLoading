@@ -1,118 +1,158 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue'; // 引入响应式与生命周期
 
-// 控制加载状态，绑定到模板 class
-const isLoading = ref(false);
+const isRunning = ref(false); // 动画当前是否展开
+let animationTimer = null; // 存储定时器 id
+const PAUSE_DURATION = 500; // 暂停时长（毫秒）
 
-// 组件挂载后触发动画（示例）
-// 1100ms 用于等待两段 0.5s 动画完成后执行回调
-onMounted(() => {
-    isLoading.value = true;
-    setTimeout(() => {
-        console.log('Loading completed');
-        // 可在此处重置 isLoading 或执行其它后续逻辑
-    }, 1100);
+function expandAnimation() {
+    isRunning.value = true; // 切换为展开状态
+    animationTimer = setTimeout(() => { // 等待展开完成
+        pauseThenCollapse(); // 进入暂停再收缩
+    }, 700); // 展开动画时长
+}
+
+function pauseThenCollapse() {
+    animationTimer = setTimeout(() => { // 暂停一段时间后
+        collapseAnimation(); // 启动收缩动画
+    }, PAUSE_DURATION); // 使用统一暂停时长
+}
+
+function collapseAnimation() {
+    animationTimer = setTimeout(() => { // 执行收缩动画
+        isRunning.value = false; // 标记为收缩完成
+        animationTimer = setTimeout(() => { // 收缩后再次暂停
+            expandAnimation(); // 循环回到展开
+        }, PAUSE_DURATION); // 收缩后暂停时长
+    }, 300); // 收缩动画时长
+}
+
+function start() {
+    if (animationTimer) clearTimeout(animationTimer); // 清除已有定时器
+    expandAnimation(); // 启动动画循环
+}
+
+function stop() {
+    isRunning.value = false; // 立即设置为收缩状态
+    if (animationTimer) { // 若有定时器则清除
+        clearTimeout(animationTimer); // 清除定时器
+        animationTimer = null; // 重置定时器引用
+    }
+}
+
+onMounted(() => { // 组件挂载时
+    start(); // 自动开始动画
 });
 
-function testLoadingAnimation() {
-    isLoading.value = true;
-    setTimeout(() => {
-        console.log('Loading completed');
-    }, 1100);
-}
+onUnmounted(() => { // 组件卸载时
+    stop(); // 停止并清理
+});
 </script>
 
 <template>
-    <!-- 容器：定位与 is-loading class 绑定 -->
-    <div id="pixel-loading" :class="{ 'is-loading': isLoading }">
-        <!-- 实际执行伸展动画的像素块 -->
+    <!-- 容器：类由 isRunning 控制 -->
+    <div id="pixel-loading" :class="{ expand: isRunning, collapse: !isRunning }">
+        <!-- 单个像素：执行展开/收缩动画 -->
         <div class="pixel"></div>
     </div>
-    <button @click="testLoadingAnimation()">Test Loading Animation</button>
+    <!-- 按钮：手动开始动画 -->
+    <button @click="start">Start</button>
+    <!-- 按钮：手动停止动画 -->
+    <button @click="stop">Stop</button>
 </template>
 
 <style scoped>
 #pixel-loading {
-    /* 最终尺寸与初始像素大小 */
+    /* 最终宽度变量 */
     --final-width: 50px;
+    /* 最终高度变量 */
     --final-height: 50px;
+    /* 像素初始尺寸变量 */
     --initial-size: 5px;
 
+    /* 绝对定位容器 */
     position: absolute;
-    /* 水平居中（基于元素中心） */
+    /* 水平居中基点 */
     left: 50%;
+    /* 向左平移 50% 以居中 */
     transform: translateX(-50%);
+    /* 变换基点设置为中心 */
     transform-origin: center center;
-
-    /* 垂直中心按最终高度计算 */
+    /* 垂直居中（减去一半高度） */
     bottom: calc(50% - var(--final-height) / 2);
-
-    /* 将容器固定为最终尺寸，内部像素块在此容器内伸展 */
+    /* 容器尺寸：使用变量 */
     width: var(--final-width);
     height: var(--final-height);
+    /* 背景透明 */
     background: transparent;
+    /* 允许动画溢出可见 */
     overflow: visible;
 }
 
-/* 像素块初始状态：小方块，靠左并与底部对齐 */
 .pixel {
+    /* 像素为绝对定位相对容器 */
     position: absolute;
+    /* 靠左对齐 */
     left: 0;
+    /* 靠下对齐 */
     bottom: 0;
-    /* 固定底部以实现自下而上生长 */
+    /* 初始宽度 */
     width: var(--initial-size);
+    /* 初始高度 */
     height: var(--initial-size);
+    /* 像素颜色 */
     background-color: #000;
+    /* 变换基点为左下角 */
     transform-origin: left bottom;
-    /* 宽度以左为锚，垂直以底为锚 */
-
-    /* 性能优化提示，提升动画丝滑度 */
+    /* 提示浏览器优化宽高动画 */
     will-change: width, height;
 }
 
-/* 使用丝滑的自定义缓动曲线并保持无限循环 */
-#pixel-loading.is-loading .pixel {
-    /* 使用更丝滑的非线性缓动：
-       cubic-bezier(0.22, 1, 0.36, 1) 常用于产生平滑且略有弹性的过渡 */
-    animation: pixelLoop 2.5s cubic-bezier(0.22, 1, 0.36, 1) infinite;
-    /* 兼容性备选（浏览器可能忽略）： */
-    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+#pixel-loading.expand .pixel {
+    /* 展开时使用 expand 动画 */
+    animation: expand 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-/* 使用单一 keyframes 完成前进 -> 等待1s -> 反向 -> 收回后等待0.5s，并无限循环 */
-@keyframes pixelLoop {
-    from {
+#pixel-loading.collapse .pixel {
+    /* 收缩时使用 collapse 动画 */
+    animation: collapse 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes expand {
+    0% {
+        /* 初始状态：小像素 */
         width: var(--initial-size);
         height: var(--initial-size);
     }
 
-    14% {
+    50% {
+        /* 中间状态：横向拉伸 */
         width: 100%;
         height: var(--initial-size);
     }
 
-    28% {
+    100% {
+        /* 结束状态：填满容器 */
+        width: 100%;
+        height: 100%;
+    }
+}
+
+@keyframes collapse {
+    0% {
+        /* 初始：填满容器 */
         width: 100%;
         height: 100%;
     }
 
-    68% {
-        width: 100%;
-        height: 100%;
-    }
-
-    74% {
+    50% {
+        /* 中间：再次横向拉伸但高度回到初始 */
         width: 100%;
         height: var(--initial-size);
     }
 
-    80% {
-        width: var(--initial-size);
-        height: var(--initial-size);
-    }
-
-    to {
-        /* 保持小方块直到下一周期开始（80% -> 100% 为 0.5s 等待） */
+    100% {
+        /* 结束：回到像素大小 */
         width: var(--initial-size);
         height: var(--initial-size);
     }
